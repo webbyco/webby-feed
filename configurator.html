@@ -172,8 +172,11 @@
   .wf-sb-hidden{scrollbar-width:none;}
   .wf-sb-hidden::-webkit-scrollbar{display:none;}
   .wf-item{background:#fff; border-radius:var(--wf-radius); overflow:hidden; border:1px solid #eceef0; display:flex; flex-direction:column;}
-  .wf-thumb{position:relative; aspect-ratio:1/1; overflow:hidden; background:#e9ebee;}
+  .wf-thumb{position:relative; overflow:hidden; background:#e9ebee;}
+  .wf-grid .wf-thumb, .wf-carousel .wf-thumb{aspect-ratio:1/1;}
+  .wf-masonry .wf-thumb{aspect-ratio:auto;}
   .wf-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .wf-masonry .wf-thumb img{height:auto; object-fit:unset;}
   .wf-play{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center;}
   .wf-play svg{width:11px; height:11px; fill:#fff;}
   .wf-body{padding:10px 12px 12px;}
@@ -247,8 +250,8 @@
         <input type="range" id="columns" min="1" max="6" value="3">
       </div>
       <div class="field" id="tileSizeField" style="display:none;">
-        <div class="field-label">Tile size <span class="val-pill" id="tileSizeVal">auto</span></div>
-        <input type="range" id="tileSize" min="0" max="400" step="20" value="0">
+        <div class="field-label">Items visible <span class="val-pill" id="tileSizeVal">3.5</span></div>
+        <input type="range" id="tileSize" min="1.5" max="6" step="0.5" value="3.5">
       </div>
       <div class="field">
         <div class="field-label">Gap <span class="val-pill" id="gapVal">10px</span></div>
@@ -260,7 +263,7 @@
       </div>
       <div class="field">
         <div class="field-label">Posts to show <span class="val-pill" id="postsVal">6</span></div>
-        <input type="range" id="posts" min="1" max="12" value="6">
+        <input type="range" id="posts" min="1" max="24" value="6">
       </div>
     </div>
 
@@ -329,21 +332,21 @@
 console.log('WF_CONFIGURATOR_SCRIPT_START');
 (function(){
   var demoPosts = [
-    {id:'1', type:'image', image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&q=80', likes:214, comments:12, caption:'New 9-foot steel piece heading to Orlando this week', permalink:'#'},
-    {id:'2', type:'video', image:'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=500&q=80', likes:341, comments:28, caption:'Corten commission, install complete', permalink:'#', video:'#'},
-    {id:'3', type:'image', image:'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500&q=80', likes:98, comments:4, caption:'Studio shot from this morning', permalink:'#'},
-    {id:'4', type:'image', image:'https://images.unsplash.com/photo-1554188248-986adbb73be4?w=500&q=80', likes:176, comments:9, caption:'Client walkthrough for the Scottsdale piece', permalink:'#'},
-    {id:'5', type:'image', image:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=500&q=80', likes:267, comments:15, caption:'Detail work on the Bones series', permalink:'#'},
-    {id:'6', type:'video', image:'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=500&q=80', likes:412, comments:33, caption:'Time-lapse of the welding process', permalink:'#', video:'#'},
-    {id:'7', type:'image', image:'https://images.unsplash.com/photo-1544967082-d9d25d867d66?w=500&q=80', likes:189, comments:7, caption:'Packing day', permalink:'#'},
-    {id:'8', type:'image', image:'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=500&q=80', likes:145, comments:6, caption:'Sketching the next commercial commission', permalink:'#'},
-    {id:'9', type:'image', image:'https://images.unsplash.com/photo-1578321272176-b7bbc0679853?w=500&q=80', likes:302, comments:19, caption:'Gallery opening recap', permalink:'#'},
-    {id:'10', type:'image', image:'https://images.unsplash.com/photo-1554188248-986adbb73be4?w=500&q=80', likes:88, comments:3, caption:'Material test, raw finish before patina', permalink:'#'},
-    {id:'11', type:'image', image:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=500&q=80', likes:221, comments:11, caption:'Behind the scenes at the studio today', permalink:'#'},
-    {id:'12', type:'image', image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&q=80', likes:156, comments:8, caption:'Final polish before delivery', permalink:'#'}
+    {id:'1', type:'image', image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&h=650&q=80', likes:214, comments:12, caption:'New 9-foot steel piece heading to Orlando this week', permalink:'#'},
+    {id:'2', type:'video', image:'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=500&h=500&q=80', likes:341, comments:28, caption:'Corten commission, install complete', permalink:'#', video:'#'},
+    {id:'3', type:'image', image:'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500&h=380&q=80', likes:98, comments:4, caption:'Studio shot from this morning', permalink:'#'},
+    {id:'4', type:'image', image:'https://images.unsplash.com/photo-1554188248-986adbb73be4?w=500&h=700&q=80', likes:176, comments:9, caption:'Client walkthrough for the Scottsdale piece', permalink:'#'},
+    {id:'5', type:'image', image:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=500&h=500&q=80', likes:267, comments:15, caption:'Detail work on the Bones series', permalink:'#'},
+    {id:'6', type:'video', image:'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=500&h=340&q=80', likes:412, comments:33, caption:'Time-lapse of the welding process', permalink:'#', video:'#'},
+    {id:'7', type:'image', image:'https://images.unsplash.com/photo-1544967082-d9d25d867d66?w=500&h=620&q=80', likes:189, comments:7, caption:'Packing day', permalink:'#'},
+    {id:'8', type:'image', image:'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=500&h=500&q=80', likes:145, comments:6, caption:'Sketching the next commercial commission', permalink:'#'},
+    {id:'9', type:'image', image:'https://images.unsplash.com/photo-1578321272176-b7bbc0679853?w=500&h=430&q=80', likes:302, comments:19, caption:'Gallery opening recap', permalink:'#'},
+    {id:'10', type:'image', image:'https://images.unsplash.com/photo-1554188248-986adbb73be4?w=500&h=680&q=80', likes:88, comments:3, caption:'Material test, raw finish before patina', permalink:'#'},
+    {id:'11', type:'image', image:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=500&h=500&q=80', likes:221, comments:11, caption:'Behind the scenes at the studio today', permalink:'#'},
+    {id:'12', type:'image', image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&h=560&q=80', likes:156, comments:8, caption:'Final polish before delivery', permalink:'#'}
   ];
 
-  var state = { tier:'basic', layout:'grid', columns:3, tileSize:0, gap:10, radius:10, posts:6, autoplay:'off', speed:5, advance:'one', scrollbar:'visible', header:true, captions:true, engagement:true, lightbox:true, accent:'#C8FF4D', align:'left' };
+  var state = { tier:'basic', layout:'grid', columns:3, tileSize:3.5, gap:10, radius:10, posts:6, autoplay:'off', speed:5, advance:'one', scrollbar:'visible', header:true, captions:true, engagement:true, lightbox:true, accent:'#C8FF4D', align:'left', previewWidth:'desktop' };
 
   function seg(id, key, onChange){
     var el = document.getElementById(id);
@@ -404,7 +407,7 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
     });
   }
   slider('columns', 'columns');
-  slider('tileSize', 'tileSize', function(v){ return v === 0 ? 'auto' : v + 'px'; });
+  slider('tileSize', 'tileSize', function(v){ return v; });
   slider('gap', 'gap', function(v){ return v + 'px'; });
   slider('radius', 'radius', function(v){ return v + 'px'; });
   slider('posts', 'posts');
@@ -435,6 +438,8 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
       document.querySelectorAll('.width-toggle button').forEach(function(b){ b.classList.remove('active'); });
       btn.classList.add('active');
       document.getElementById('previewFrame').className = 'preview-frame w-' + btn.dataset.w;
+      state.previewWidth = btn.dataset.w;
+      render();
     });
   });
 
@@ -450,16 +455,21 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
     var html = '';
     if (state.header) html += '<div class="wf-header"><div class="wf-avatar"></div><div><div class="wf-handle">@petrykowski_artworks</div><div class="wf-sub">Sculpture &amp; commissions</div></div></div>';
 
+    var effCols = state.columns;
+    if (state.previewWidth === 'mobile') effCols = Math.min(state.columns, 2);
+    else if (state.previewWidth === 'tablet') effCols = Math.min(state.columns, 3);
+
     var wrapClass = state.layout === 'grid' ? 'wf-grid' : state.layout === 'masonry' ? 'wf-masonry' : 'wf-carousel';
     var wrapStyle = '';
-    if (state.layout === 'grid') wrapStyle = 'grid-template-columns:repeat(' + state.columns + ',1fr);';
-    else if (state.layout === 'masonry') wrapStyle = 'columns:' + state.columns + ';';
+    if (state.layout === 'grid') wrapStyle = 'grid-template-columns:repeat(' + effCols + ',1fr);';
+    else if (state.layout === 'masonry') wrapStyle = 'columns:' + effCols + ';';
 
     var scrollbarClass = state.layout === 'carousel' ? ' wf-sb-' + state.scrollbar : '';
     html += '<div class="' + wrapClass + scrollbarClass + '" id="wfCarouselTrack" style="' + wrapStyle + (state.align === 'center' ? 'margin:0 auto;' : '') + '">';
 
     function tileHTML(p){
-      var tileStyle = state.layout === 'carousel' && state.tileSize > 0 ? 'width:' + state.tileSize + 'px;' : (state.layout === 'carousel' ? 'width:220px;' : '');
+      var n = state.tileSize > 0 ? state.tileSize : 3.5;
+      var tileStyle = state.layout === 'carousel' ? 'flex:0 0 calc((100% - ' + (state.gap * (n - 1)) + 'px) / ' + n + ');' : '';
       var h = '<div class="wf-item" style="' + tileStyle + '">';
       h += '<div class="wf-thumb"><img src="' + p.image + '" loading="lazy" alt="">' + (p.type === 'video' ? playIcon() : '') + '</div>';
       if (state.captions || state.engagement) {
@@ -482,7 +492,7 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
   function buildAttrs(){
     var attrs = [ ['data-feed', '"https://raw.githubusercontent.com/YOUR-CLIENT-REPO/main/feed.json"'], ['data-layout', '"' + state.layout + '"'] ];
     if (state.layout === 'carousel') {
-      attrs.push(['data-tile-size', '"' + state.tileSize + '"']);
+      attrs.push(['data-items-visible', '"' + state.tileSize + '"']);
       attrs.push(['data-autoplay', '"' + state.autoplay + '"']);
       if (state.autoplay !== 'off') attrs.push(['data-speed', '"' + state.speed + '"']);
       if (state.autoplay === 'interval') attrs.push(['data-advance', '"' + state.advance + '"']);

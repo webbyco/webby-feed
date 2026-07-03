@@ -473,7 +473,7 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
     }
 
     posts.forEach(function(p){ html += tileHTML(p); });
-    if (state.layout === 'carousel' && state.autoplay === 'continuous') posts.forEach(function(p){ html += tileHTML(p); });
+    if (state.layout === 'carousel' && state.autoplay !== 'off') posts.forEach(function(p){ html += tileHTML(p); });
     html += '</div>';
     if (state.tier === 'free') html += '<div class="wf-badge">Feed by <b>Webby Co</b></div>';
     root.innerHTML = html;
@@ -534,13 +534,18 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
       autoplayRAF = requestAnimationFrame(tick);
     } else if (state.autoplay === 'interval') {
       var seconds = 6.4 - (state.speed - 1) * (6.4 - 1) / 9;
+      var halfWidth2 = track.scrollWidth / 2;
       autoplayTimer = setInterval(function(){
         var first = track.querySelector('.wf-item');
         if (!first) return;
         var basis = first.getBoundingClientRect().width + state.gap;
         var step = state.advance === 'page' ? track.clientWidth : basis;
-        var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
-        track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: 'smooth' });
+        var next = track.scrollLeft + step;
+        if (next >= halfWidth2) {
+          track.scrollTo({ left: next - halfWidth2, behavior: 'auto' });
+        } else {
+          track.scrollTo({ left: next, behavior: 'smooth' });
+        }
       }, seconds * 1000);
     }
   }

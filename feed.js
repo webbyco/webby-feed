@@ -232,13 +232,18 @@
       raf = requestAnimationFrame(tick);
     } else if (cfg.autoplay === 'interval') {
       var seconds = 6.4 - (cfg.speed - 1) * (6.4 - 1) / 9;
+      var halfWidth2 = track.scrollWidth / 2;
       setInterval(function () {
         var first = track.querySelector('.wf-item');
         if (!first) return;
         var basis = first.getBoundingClientRect().width + cfg.gap;
         var step = cfg.advance === 'page' ? track.clientWidth : basis;
-        var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
-        track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: 'smooth' });
+        var next = track.scrollLeft + step;
+        if (next >= halfWidth2) {
+          track.scrollTo({ left: next - halfWidth2, behavior: 'auto' });
+        } else {
+          track.scrollTo({ left: next, behavior: 'smooth' });
+        }
       }, seconds * 1000);
     }
   }
@@ -282,7 +287,7 @@
     }
 
     posts.forEach(function (p) { track.appendChild(buildTile(p, cfg)); });
-    if (cfg.layout === 'carousel' && cfg.autoplay === 'continuous') {
+    if (cfg.layout === 'carousel' && cfg.autoplay !== 'off') {
       posts.forEach(function (p) { track.appendChild(buildTile(p, cfg)); });
     }
 

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webby Feed — Configurator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d10;
+    --panel:#14171b;
+    --panel-2:#1a1e23;
+    --border:#23262b;
+    --text:#f5f6f7;
+    --text-muted:#8b9199;
+    --text-faint:#5b6169;
+    --accent:#c8ff4d;
+    --accent-dim:#8fb536;
+    --blue:#6ea8fe;
+    --radius:10px;
+    --mono:'JetBrains Mono', monospace;
+    --display:'Space Grotesk', sans-serif;
+    --body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  .connect-btn{
+    display:flex; align-items:center; gap:8px; width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text-muted);
+    font-size:13px; font-family:var(--body); font-weight:500;
+    padding:11px 14px; border-radius:9px;
+    cursor:not-allowed;
+  }
+  .connect-dot{width:6px; height:6px; border-radius:50%; background:var(--text-faint); flex-shrink:0;}
+  .connect-btn .tag{
+    font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+    background:var(--bg); border:1px solid var(--border); color:var(--text-faint);
+    padding:2px 7px; border-radius:5px; margin-left:auto;
+  }
+
+  .workbench{
+    display:grid;
+    grid-template-columns: 1fr 400px;
+    min-height:100vh;
+  }
+  @media (max-width: 980px){
+    .workbench{grid-template-columns: 1fr;}
+  }
+
+  .preview-pane{
+    padding:32px;
+    display:flex; flex-direction:column; gap:18px;
+    background:
+      radial-gradient(circle at 1px 1px, #1c2025 1px, transparent 0) 0 0/22px 22px,
+      var(--bg);
+    min-width:0;
+  }
+  .preview-toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:10px;
+  }
+  .preview-label{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--text-faint);
+  }
+  .width-toggle{display:flex; gap:6px; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:3px;}
+  .width-toggle button{
+    background:transparent; border:none; color:var(--text-muted); font-family:var(--mono); font-size:11px;
+    padding:6px 12px; border-radius:6px; cursor:pointer;
+  }
+  .width-toggle button.active{background:var(--accent); color:#0b0d10; font-weight:500;}
+
+  .preview-frame{
+    background:#fff;
+    border-radius:14px;
+    border:1px solid var(--border);
+    overflow:auto;
+    flex:1;
+    min-height:520px;
+    padding:36px 28px;
+    margin:0 auto;
+    width:100%;
+  }
+  .preview-frame.w-mobile{max-width:390px;}
+  .preview-frame.w-tablet{max-width:720px;}
+  .preview-frame.w-desktop{max-width:100%;}
+
+  .embed-block{margin-top:4px;}
+  .embed-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .copy-btn{
+    background:var(--accent); color:#0b0d10; border:none; border-radius:8px;
+    font-family:var(--body); font-weight:600; font-size:13px;
+    padding:10px 18px; cursor:pointer; display:flex; align-items:center; gap:8px;
+  }
+  .copy-btn.copied{background:var(--blue);}
+  pre.code{
+    background:#0d0f12; border:1px solid var(--border); border-radius:10px;
+    padding:18px; font-family:var(--mono); font-size:12.5px; line-height:1.7;
+    color:#c9d1d9; overflow-x:auto; white-space:pre;
+  }
+  pre.code .tag{color:#7ee787;}
+  pre.code .attr{color:var(--accent);}
+  pre.code .val{color:#a5d6ff;}
+  .code-note{font-size:12px; color:var(--text-faint); margin-top:10px; line-height:1.5;}
+  .code-note code{font-family:var(--mono); background:var(--panel-2); border:1px solid var(--border); padding:1px 5px; border-radius:4px; color:var(--accent);}
+
+  .settings-pane{
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    padding:24px 22px 100px;
+    overflow-y:auto;
+    max-height:100vh;
+  }
+
+  .group{margin-bottom:26px;}
+  .group-title{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--accent-dim); margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .group-title::after{content:''; flex:1; height:1px; background:var(--border);}
+
+  .field{margin-bottom:16px;}
+  .field-label{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text); margin-bottom:8px; font-weight:500;}
+  .field-label .val-pill{margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--text-faint); background:var(--panel-2); border:1px solid var(--border); padding:2px 7px; border-radius:5px;}
+
+  .seg{display:flex; background:var(--panel-2); border:1px solid var(--border); border-radius:8px; padding:3px; gap:2px;}
+  .seg button{flex:1; background:transparent; border:none; color:var(--text-muted); font-size:12.5px; font-family:var(--body); font-weight:500; padding:8px 6px; border-radius:6px; cursor:pointer;}
+  .seg button.active{background:var(--accent); color:#0b0d10;}
+  .seg button:disabled{opacity:0.3; cursor:not-allowed;}
+
+  input[type="range"]{width:100%; -webkit-appearance:none; height:4px; border-radius:2px; background:var(--border); outline:none;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #0b0d10;}
+
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0;}
+  .toggle-row .field-label{margin-bottom:0;}
+  .switch{position:relative; width:38px; height:22px; flex-shrink:0;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider-switch{position:absolute; inset:0; background:var(--border); border-radius:999px; cursor:pointer;}
+  .slider-switch::before{content:''; position:absolute; width:16px; height:16px; left:3px; top:3px; background:var(--text-muted); border-radius:50%;}
+  input:checked + .slider-switch{background:var(--accent-dim);}
+  input:checked + .slider-switch::before{transform:translateX(16px); background:#0b0d10;}
+
+  .color-row{display:flex; align-items:center; gap:10px;}
+  .swatch{width:36px; height:36px; border-radius:8px; border:1px solid var(--border); cursor:pointer; flex-shrink:0; position:relative; overflow:hidden;}
+  .swatch input[type="color"]{position:absolute; inset:-4px; width:calc(100% + 8px); height:calc(100% + 8px); border:none; cursor:pointer;}
+  .hex-input{background:var(--panel-2); border:1px solid var(--border); color:var(--text); font-family:var(--mono); font-size:13px; padding:9px 12px; border-radius:7px; width:100%;}
+
+  .tier-row{display:flex; gap:8px;}
+  .tier-card{flex:1; border:1px solid var(--border); background:var(--panel-2); border-radius:9px; padding:12px 10px; cursor:pointer; text-align:center;}
+  .tier-card.active{border-color:var(--accent); background:rgba(200,255,77,0.06);}
+  .tier-card .tname{font-family:var(--display); font-weight:600; font-size:13px;}
+  .tier-card .tprice{font-family:var(--mono); font-size:10.5px; color:var(--text-faint); margin-top:2px;}
+
+  .lock-note{font-size:11.5px; color:var(--text-faint); margin-top:6px; display:flex; gap:6px; align-items:flex-start;}
+
+  .wf-preview-root{--wf-accent:#c8ff4d; --wf-gap:10px; --wf-radius:10px;}
+  .wf-grid{display:grid; gap:var(--wf-gap);}
+  .wf-masonry{columns:3; column-gap:var(--wf-gap);}
+  .wf-masonry .wf-item{break-inside:avoid; margin-bottom:var(--wf-gap);}
+  .wf-carousel{display:flex; gap:var(--wf-gap); overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px;}
+  .wf-carousel .wf-item{flex:0 0 auto; scroll-snap-align:start;}
+  .wf-sb-hidden{scrollbar-width:none;}
+  .wf-sb-hidden::-webkit-scrollbar{display:none;}
+  .wf-item{background:#fff; border-radius:var(--wf-radius); overflow:hidden; border:1px solid #eceef0; display:flex; flex-direction:column;}
+  .wf-thumb{position:relative; aspect-ratio:1/1; overflow:hidden; background:#e9ebee;}
+  .wf-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .wf-play{position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center;}
+  .wf-play svg{width:11px; height:11px; fill:#fff;}
+  .wf-body{padding:10px 12px 12px;}
+  .wf-caption{font-size:12.5px; color:#2a2d31; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em;}
+  .wf-engage{display:flex; gap:12px; margin-top:8px; font-size:11.5px; color:#7b8188;}
+  .wf-engage span{display:flex; align-items:center; gap:4px;}
+  .wf-header{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .wf-avatar{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--wf-accent),#8fb536); flex-shrink:0;}
+  .wf-handle{font-size:13px; font-weight:600; color:#1a1c1e;}
+  .wf-sub{font-size:11.5px; color:#9aa0a6;}
+  .wf-badge{display:inline-flex; align-items:center; gap:5px; margin-top:14px; font-size:10.5px; color:#a7acb1;}
+  .wf-badge b{color:#1a1c1e;}
+</style>
+</head>
+<body>
+
+<div class="workbench">
+
+  <div class="preview-pane">
+    <div class="preview-toolbar">
+      <div class="preview-label">Live preview</div>
+      <div class="width-toggle">
+        <button data-w="mobile">Mobile</button>
+        <button data-w="tablet">Tablet</button>
+        <button data-w="desktop" class="active">Desktop</button>
+      </div>
+    </div>
+
+    <div class="preview-frame w-desktop" id="previewFrame">
+      <div class="wf-preview-root" id="wfRoot"></div>
+    </div>
+
+    <div class="embed-block">
+      <div class="embed-header">
+        <div class="preview-label">Embed code</div>
+        <button class="copy-btn" id="copyBtn">Copy code</button>
+      </div>
+      <pre class="code" id="codeOut"></pre>
+      <div class="code-note"><code>data-feed</code> points to a placeholder for now.</div>
+    </div>
+  </div>
+
+  <div class="settings-pane">
+
+    <div class="group">
+      <div class="group-title">Account</div>
+      <button class="connect-btn"><span class="connect-dot"></span>Connect Instagram account<span class="tag">coming soon</span></button>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Plan</div>
+      <div class="tier-row" id="tierRow">
+        <div class="tier-card" data-tier="free"><div class="tname">Free</div><div class="tprice">badge shown</div></div>
+        <div class="tier-card active" data-tier="basic"><div class="tname">Basic</div><div class="tprice">no badge</div></div>
+        <div class="tier-card" data-tier="pro"><div class="tname">Pro</div><div class="tprice">+ autoplay</div></div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Layout</div>
+      <div class="field">
+        <div class="field-label">Style</div>
+        <div class="seg" id="layoutSeg">
+          <button data-v="grid" class="active">Grid</button>
+          <button data-v="masonry">Masonry</button>
+          <button data-v="carousel">Carousel</button>
+        </div>
+      </div>
+      <div class="field" id="columnsField">
+        <div class="field-label">Columns <span class="val-pill" id="columnsVal">3</span></div>
+        <input type="range" id="columns" min="1" max="6" value="3">
+      </div>
+      <div class="field" id="tileSizeField" style="display:none;">
+        <div class="field-label">Tile size <span class="val-pill" id="tileSizeVal">auto</span></div>
+        <input type="range" id="tileSize" min="0" max="400" step="20" value="0">
+      </div>
+      <div class="field">
+        <div class="field-label">Gap <span class="val-pill" id="gapVal">10px</span></div>
+        <input type="range" id="gap" min="0" max="32" value="10">
+      </div>
+      <div class="field">
+        <div class="field-label">Corner radius <span class="val-pill" id="radiusVal">10px</span></div>
+        <input type="range" id="radius" min="0" max="32" value="10">
+      </div>
+      <div class="field">
+        <div class="field-label">Posts to show <span class="val-pill" id="postsVal">6</span></div>
+        <input type="range" id="posts" min="1" max="12" value="6">
+      </div>
+    </div>
+
+    <div class="group" id="carouselGroup" style="display:none;">
+      <div class="group-title">Carousel</div>
+      <div class="field">
+        <div class="field-label">Autoplay</div>
+        <div class="seg" id="autoplaySeg">
+          <button data-v="off" class="active">Off</button>
+          <button data-v="interval">Interval</button>
+          <button data-v="continuous">Continuous</button>
+        </div>
+        <div class="lock-note" id="autoplayLock">Autoplay is a Pro feature</div>
+      </div>
+      <div class="field" id="speedField" style="display:none;">
+        <div class="field-label">Speed <span class="val-pill" id="speedVal">5</span></div>
+        <input type="range" id="speed" min="1" max="10" value="5">
+      </div>
+      <div class="field" id="advanceField" style="display:none;">
+        <div class="field-label">Advance</div>
+        <div class="seg" id="advanceSeg">
+          <button data-v="one" class="active">One tile</button>
+          <button data-v="page">Full page</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Scrollbar</div>
+        <div class="seg" id="scrollbarSeg">
+          <button data-v="visible" class="active">Visible</button>
+          <button data-v="hover">On hover</button>
+          <button data-v="hidden">Hidden</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Content</div>
+      <div class="toggle-row"><div class="field-label">Profile header</div><label class="switch"><input type="checkbox" id="header" checked><span class="slider-switch"></span></label></div>
+      <div class="toggle-row"><div class="field-label">Captions</div><label class="switch"><input type="checkbox" id="captions" checked><span class="slider-switch"></span></label></div>
+      <div class="toggle-row"><div class="field-label">Likes &amp; comments</div><label class="switch"><input type="checkbox" id="engagement" checked><span class="slider-switch"></span></label></div>
+      <div class="toggle-row"><div class="field-label">Lightbox on click</div><label class="switch"><input type="checkbox" id="lightbox" checked><span class="slider-switch"></span></label></div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Style</div>
+      <div class="field">
+        <div class="field-label">Accent color</div>
+        <div class="color-row">
+          <div class="swatch" style="background:#c8ff4d;"><input type="color" id="accentPicker" value="#c8ff4d"></div>
+          <input class="hex-input" id="accentHex" value="#C8FF4D">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Alignment</div>
+        <div class="seg" id="alignSeg">
+          <button data-v="left" class="active">Left</button>
+          <button data-v="center">Center</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+console.log('WF_CONFIGURATOR_SCRIPT_START');
+(function(){
+  var demoPosts = [
+    {id:'1', type:'image', image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&q=80', likes:214, comments:12, caption:'New 9-foot steel piece heading to Orlando this week', permalink:'#'},
+    {id:'2', type:'video', image:'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=500&q=80', likes:341, comments:28, caption:'Corten commission, install complete', permalink:'#', video:'#'},
+    {id:'3', type:'image', image:'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500&q=80', likes:98, comments:4, caption:'Studio shot from this morning', permalink:'#'},
+    {id:'4', type:'image', image:'https://images.unsplash.com/photo-1554188248-986adbb73be4?w=500&q=80', likes:176, comments:9, caption:'Client walkthrough for the Scottsdale piece', permalink:'#'},
+    {id:'5', type:'image', image:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=500&q=80', likes:267, comments:15, caption:'Detail work on the Bones series', permalink:'#'},
+    {id:'6', type:'video', image:'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=500&q=80', likes:412, comments:33, caption:'Time-lapse of the welding process', permalink:'#', video:'#'},
+    {id:'7', type:'image', image:'https://images.unsplash.com/photo-1544967082-d9d25d867d66?w=500&q=80', likes:189, comments:7, caption:'Packing day', permalink:'#'},
+    {id:'8', type:'image', image:'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=500&q=80', likes:145, comments:6, caption:'Sketching the next commercial commission', permalink:'#'},
+    {id:'9', type:'image', image:'https://images.unsplash.com/photo-1578321272176-b7bbc0679853?w=500&q=80', likes:302, comments:19, caption:'Gallery opening recap', permalink:'#'},
+    {id:'10', type:'image', image:'https://images.unsplash.com/photo-1554188248-986adbb73be4?w=500&q=80', likes:88, comments:3, caption:'Material test, raw finish before patina', permalink:'#'},
+    {id:'11', type:'image', image:'https://images.unsplash.com/photo-1531913764164-f85c52e6e654?w=500&q=80', likes:221, comments:11, caption:'Behind the scenes at the studio today', permalink:'#'},
+    {id:'12', type:'image', image:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&q=80', likes:156, comments:8, caption:'Final polish before delivery', permalink:'#'}
+  ];
+
+  var state = { tier:'basic', layout:'grid', columns:3, tileSize:0, gap:10, radius:10, posts:6, autoplay:'off', speed:5, advance:'one', scrollbar:'visible', header:true, captions:true, engagement:true, lightbox:true, accent:'#C8FF4D', align:'left' };
+
+  function seg(id, key, onChange){
+    var el = document.getElementById(id);
+    el.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if (btn.disabled) return;
+        el.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        state[key] = btn.dataset.v;
+        if (onChange) onChange();
+        render();
+      });
+    });
+  }
+
+  seg('layoutSeg', 'layout', function(){
+    document.getElementById('carouselGroup').style.display = state.layout === 'carousel' ? 'block' : 'none';
+    document.getElementById('tileSizeField').style.display = state.layout === 'carousel' ? 'block' : 'none';
+    document.getElementById('columnsField').style.display = state.layout === 'carousel' ? 'none' : 'block';
+  });
+  seg('autoplaySeg', 'autoplay', function(){
+    document.getElementById('speedField').style.display = state.autoplay !== 'off' ? 'block' : 'none';
+    document.getElementById('advanceField').style.display = state.autoplay === 'interval' ? 'block' : 'none';
+  });
+  seg('advanceSeg', 'advance');
+  seg('scrollbarSeg', 'scrollbar');
+  seg('alignSeg', 'align');
+
+  document.querySelectorAll('.tier-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      document.querySelectorAll('.tier-card').forEach(function(c){ c.classList.remove('active'); });
+      card.classList.add('active');
+      state.tier = card.dataset.tier;
+      var lockedOut = state.tier !== 'pro';
+      document.getElementById('autoplayLock').style.display = lockedOut ? 'flex' : 'none';
+      document.getElementById('autoplaySeg').querySelectorAll('button').forEach(function(b){
+        if (b.dataset.v !== 'off') b.disabled = lockedOut;
+      });
+      if (lockedOut && state.autoplay !== 'off') {
+        state.autoplay = 'off';
+        document.getElementById('autoplaySeg').querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.dataset.v === 'off'); });
+        document.getElementById('speedField').style.display = 'none';
+        document.getElementById('advanceField').style.display = 'none';
+      }
+      render();
+    });
+  });
+  document.getElementById('autoplayLock').style.display = 'flex';
+  document.getElementById('autoplaySeg').querySelectorAll('button').forEach(function(b){ if (b.dataset.v !== 'off') b.disabled = true; });
+
+  function slider(id, key, fmt){
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + 'Val');
+    el.addEventListener('input', function(){
+      state[key] = Number(el.value);
+      if (out) out.textContent = fmt ? fmt(state[key]) : state[key];
+      render();
+    });
+  }
+  slider('columns', 'columns');
+  slider('tileSize', 'tileSize', function(v){ return v === 0 ? 'auto' : v + 'px'; });
+  slider('gap', 'gap', function(v){ return v + 'px'; });
+  slider('radius', 'radius', function(v){ return v + 'px'; });
+  slider('posts', 'posts');
+  slider('speed', 'speed');
+
+  ['header','captions','engagement','lightbox'].forEach(function(key){
+    document.getElementById(key).addEventListener('change', function(e){ state[key] = e.target.checked; render(); });
+  });
+
+  document.getElementById('accentPicker').addEventListener('input', function(e){
+    state.accent = e.target.value.toUpperCase();
+    document.getElementById('accentHex').value = state.accent;
+    document.querySelector('.swatch').style.background = state.accent;
+    render();
+  });
+  document.getElementById('accentHex').addEventListener('change', function(e){
+    var v = e.target.value.trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+      state.accent = v.toUpperCase();
+      document.getElementById('accentPicker').value = v;
+      document.querySelector('.swatch').style.background = v;
+      render();
+    }
+  });
+
+  document.querySelectorAll('.width-toggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.width-toggle button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('previewFrame').className = 'preview-frame w-' + btn.dataset.w;
+    });
+  });
+
+  function playIcon(){ return '<div class="wf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>'; }
+
+  function renderWidget(){
+    var root = document.getElementById('wfRoot');
+    root.style.setProperty('--wf-accent', state.accent);
+    root.style.setProperty('--wf-gap', state.gap + 'px');
+    root.style.setProperty('--wf-radius', state.radius + 'px');
+
+    var posts = demoPosts.slice(0, state.posts);
+    var html = '';
+    if (state.header) html += '<div class="wf-header"><div class="wf-avatar"></div><div><div class="wf-handle">@petrykowski_artworks</div><div class="wf-sub">Sculpture &amp; commissions</div></div></div>';
+
+    var wrapClass = state.layout === 'grid' ? 'wf-grid' : state.layout === 'masonry' ? 'wf-masonry' : 'wf-carousel';
+    var wrapStyle = '';
+    if (state.layout === 'grid') wrapStyle = 'grid-template-columns:repeat(' + state.columns + ',1fr);';
+    else if (state.layout === 'masonry') wrapStyle = 'columns:' + state.columns + ';';
+
+    var scrollbarClass = state.layout === 'carousel' ? ' wf-sb-' + state.scrollbar : '';
+    html += '<div class="' + wrapClass + scrollbarClass + '" id="wfCarouselTrack" style="' + wrapStyle + (state.align === 'center' ? 'margin:0 auto;' : '') + '">';
+
+    function tileHTML(p){
+      var tileStyle = state.layout === 'carousel' && state.tileSize > 0 ? 'width:' + state.tileSize + 'px;' : (state.layout === 'carousel' ? 'width:220px;' : '');
+      var h = '<div class="wf-item" style="' + tileStyle + '">';
+      h += '<div class="wf-thumb"><img src="' + p.image + '" loading="lazy" alt="">' + (p.type === 'video' ? playIcon() : '') + '</div>';
+      if (state.captions || state.engagement) {
+        h += '<div class="wf-body">';
+        if (state.captions) h += '<div class="wf-caption">' + p.caption + '</div>';
+        if (state.engagement) h += '<div class="wf-engage"><span>Likes ' + p.likes + '</span><span>Comments ' + p.comments + '</span></div>';
+        h += '</div>';
+      }
+      h += '</div>';
+      return h;
+    }
+
+    posts.forEach(function(p){ html += tileHTML(p); });
+    if (state.layout === 'carousel' && state.autoplay === 'continuous') posts.forEach(function(p){ html += tileHTML(p); });
+    html += '</div>';
+    if (state.tier === 'free') html += '<div class="wf-badge">Feed by <b>Webby Co</b></div>';
+    root.innerHTML = html;
+  }
+
+  function buildAttrs(){
+    var attrs = [ ['data-feed', '"https://raw.githubusercontent.com/YOUR-CLIENT-REPO/main/feed.json"'], ['data-layout', '"' + state.layout + '"'] ];
+    if (state.layout === 'carousel') {
+      attrs.push(['data-tile-size', '"' + state.tileSize + '"']);
+      attrs.push(['data-autoplay', '"' + state.autoplay + '"']);
+      if (state.autoplay !== 'off') attrs.push(['data-speed', '"' + state.speed + '"']);
+      if (state.autoplay === 'interval') attrs.push(['data-advance', '"' + state.advance + '"']);
+      attrs.push(['data-scrollbar', '"' + state.scrollbar + '"']);
+    } else {
+      attrs.push(['data-columns', '"' + state.columns + '"']);
+    }
+    attrs.push(['data-gap', '"' + state.gap + '"']);
+    attrs.push(['data-radius', '"' + state.radius + '"']);
+    attrs.push(['data-posts', '"' + state.posts + '"']);
+    attrs.push(['data-accent', '"' + state.accent + '"']);
+    attrs.push(['data-header', '"' + state.header + '"']);
+    attrs.push(['data-captions', '"' + state.captions + '"']);
+    attrs.push(['data-engagement', '"' + state.engagement + '"']);
+    attrs.push(['data-lightbox', '"' + state.lightbox + '"']);
+    attrs.push(['data-align', '"' + state.align + '"']);
+    attrs.push(['data-tier', '"' + state.tier + '"']);
+    return attrs;
+  }
+
+  function renderCode(){
+    var attrs = buildAttrs();
+    var lines = attrs.map(function(pair){ return '     <span class="attr">' + pair[0] + '</span>=<span class="val">' + pair[1] + '</span>'; });
+    var code = '<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://raw.githubusercontent.com/webbyco/webby-feed/main/feed.js"</span><span class="tag">&gt;&lt;/script&gt;</span>\n' +
+      '<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="val">"webby-feed"</span>\n' + lines.join('\n') + '\n' + '<span class="tag">&gt;&lt;/div&gt;</span>';
+    document.getElementById('codeOut').innerHTML = code;
+  }
+
+  var autoplayTimer = null, autoplayRAF = null;
+  function stopAutoplay(){
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+    if (autoplayRAF) { cancelAnimationFrame(autoplayRAF); autoplayRAF = null; }
+  }
+  function startAutoplay(){
+    if (state.layout !== 'carousel' || state.autoplay === 'off') return;
+    var track = document.getElementById('wfCarouselTrack');
+    if (!track) return;
+    if (state.autoplay === 'continuous') {
+      var pxPerFrame = 0.25 + (state.speed - 1) * (2.5 - 0.25) / 9;
+      var halfWidth = track.scrollWidth / 2;
+      function tick(){
+        track.scrollLeft += pxPerFrame;
+        if (track.scrollLeft >= halfWidth) track.scrollLeft -= halfWidth;
+        autoplayRAF = requestAnimationFrame(tick);
+      }
+      autoplayRAF = requestAnimationFrame(tick);
+    } else if (state.autoplay === 'interval') {
+      var seconds = 6.4 - (state.speed - 1) * (6.4 - 1) / 9;
+      autoplayTimer = setInterval(function(){
+        var first = track.querySelector('.wf-item');
+        if (!first) return;
+        var basis = first.getBoundingClientRect().width + state.gap;
+        var step = state.advance === 'page' ? track.clientWidth : basis;
+        var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+        track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: 'smooth' });
+      }, seconds * 1000);
+    }
+  }
+
+  function render(){
+    stopAutoplay();
+    renderWidget();
+    renderCode();
+    startAutoplay();
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var attrs = buildAttrs();
+    var plain = '<script src="https://raw.githubusercontent.com/webbyco/webby-feed/main/feed.js"><\/script>\n<div class="webby-feed"\n' + attrs.map(function(p){ return '     ' + p[0] + '=' + p[1]; }).join('\n') + '\n></div>';
+    navigator.clipboard.writeText(plain).then(function(){
+      var btn = document.getElementById('copyBtn');
+      var original = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = original; btn.classList.remove('copied'); }, 1600);
+    });
+  });
+
+  render();
+  console.log('WF_CONFIGURATOR_RENDER_OK');
+})();
+</script>
+</body>
+</html>

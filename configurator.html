@@ -167,7 +167,7 @@
   .wf-grid{display:grid; gap:var(--wf-gap);}
   .wf-masonry{columns:3; column-gap:var(--wf-gap);}
   .wf-masonry .wf-item{break-inside:avoid; margin-bottom:var(--wf-gap);}
-  .wf-carousel{display:flex; gap:var(--wf-gap); overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px;}
+  .wf-carousel{display:flex; gap:var(--wf-gap); overflow-x:auto; scroll-snap-type:x proximity; padding-bottom:6px;}
   .wf-carousel .wf-item{flex:0 0 auto; scroll-snap-align:start;}
   .wf-sb-hidden{scrollbar-width:none;}
   .wf-sb-hidden::-webkit-scrollbar{display:none;}
@@ -515,12 +515,15 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
   function stopAutoplay(){
     if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
     if (autoplayRAF) { cancelAnimationFrame(autoplayRAF); autoplayRAF = null; }
+    var track = document.getElementById('wfCarouselTrack');
+    if (track) track.style.scrollSnapType = '';
   }
   function startAutoplay(){
     if (state.layout !== 'carousel' || state.autoplay === 'off') return;
     var track = document.getElementById('wfCarouselTrack');
     if (!track) return;
     if (state.autoplay === 'continuous') {
+      track.style.scrollSnapType = 'none';
       var pxPerFrame = 0.25 + (state.speed - 1) * (2.5 - 0.25) / 9;
       var halfWidth = track.scrollWidth / 2;
       function tick(){

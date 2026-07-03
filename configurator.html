@@ -215,7 +215,7 @@
         <button class="copy-btn" id="copyBtn">Copy code</button>
       </div>
       <pre class="code" id="codeOut"></pre>
-      <div class="code-note"><code>data-feed</code> points to a placeholder for now.</div>
+      <div class="code-note"><code>data-feed</code> currently points to a real, live test feed (Petrykowski Artworks) so copied code works immediately. Once "Connect Instagram" is live, this will automatically switch to each client's own feed instead.</div>
     </div>
   </div>
 
@@ -490,7 +490,7 @@ console.log('WF_CONFIGURATOR_SCRIPT_START');
   }
 
   function buildAttrs(){
-    var attrs = [ ['data-feed', '"https://raw.githubusercontent.com/YOUR-CLIENT-REPO/main/feed.json"'], ['data-layout', '"' + state.layout + '"'] ];
+    var attrs = [ ['data-feed', '"https://raw.githubusercontent.com/webbyco/webby-feed/main/feed.json"'], ['data-layout', '"' + state.layout + '"'] ];
     if (state.layout === 'carousel') {
       attrs.push(['data-items-visible', '"' + state.tileSize + '"']);
       attrs.push(['data-autoplay', '"' + state.autoplay + '"']);

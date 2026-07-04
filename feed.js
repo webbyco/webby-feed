@@ -84,7 +84,8 @@
     var el = document.createElement('div');
     el.className = 'wf-item';
     if (cfg.layout === 'carousel') {
-      el.style.width = cfg.tileSize > 0 ? cfg.tileSize + 'px' : '220px';
+      var n = cfg.itemsVisible > 0 ? cfg.itemsVisible : 3.5;
+      el.style.flex = '0 0 calc((100% - ' + (cfg.gap * (n - 1)) + 'px) / ' + n + ')';
     }
 
     var thumb = document.createElement('div');
@@ -309,7 +310,7 @@
     return {
       layout: el.getAttribute('data-layout') || 'grid',
       columns: num(el.getAttribute('data-columns'), 3),
-      tileSize: num(el.getAttribute('data-tile-size'), 0),
+      itemsVisible: num(el.getAttribute('data-items-visible'), 3.5),
       gap: num(el.getAttribute('data-gap'), 10),
       radius: num(el.getAttribute('data-radius'), 10),
       posts: num(el.getAttribute('data-posts'), 0),
